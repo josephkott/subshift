@@ -1,7 +1,7 @@
 .DS_Store
 
-./artifacts
-./artifacts/*
+artifacts
+artifacts/*
 
 # MATLAB extensions files
-.mex*
+*.mex*
