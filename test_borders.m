@@ -1,6 +1,8 @@
 %% Test \mathcal{U}_{L_1}^+ borders
 clc; clear
 
+addpath('elliptic')
+
 intervals = 512;
 M = 512; N = 512;
 u_span = [-5 +5];

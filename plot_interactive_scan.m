@@ -4,8 +4,8 @@ omega = params(1); L1 = params(2); L2 = params(2);
 L = L1 + L2;
 
 intervals = 512;
-M = 1024; N = 1024;
-% M = 128; N = 128;
+% M = 1024; N = 1024;
+M = 128; N = 128; % debug mode
 
 x_span_plus  = [0 +L];
 x_span_minus = [0 -L];
@@ -40,13 +40,13 @@ p2 = [u_click, du_click + delta];
 L1 = params(2); L2 = params(3); L = L1 + L2;
 intervals = 2048;
 
-[~, U] = f_solve(params, [0 -L2], p0, intervals);
+[~, U] = f_solve(params, [0 +L], p0, intervals);
 p0_map = U(end, :);
 
-[~, U] = f_solve(params, [0 -L2], p1, intervals);
+[~, U] = f_solve(params, [0 +L], p1, intervals);
 p1_map = U(end, :);
 
-[~, U] = f_solve(params, [0 -L2], p2, intervals);
+[~, U] = f_solve(params, [0 +L], p2, intervals);
 p2_map = U(end, :);
 
 % Create vectors
@@ -56,6 +56,10 @@ e1_map = p1_map - p0_map;
 e2_map = p2_map - p0_map;
 
 % Normalise vectors
+fprintf('e1_map: %.2f, %.2f\n', [e1_map(1) e1_map(2)])
+fprintf('e2_map: %.2f, %.2f\n', [e2_map(1) e2_map(2)])
+fprintf('norm: %.2f, %.2f\n', [norm(e1_map) norm(e2_map)])
+
 e1_norm = e1 / norm(e1);
 e2_norm = e2 / norm(e2);
 e1_map_norm = e1_map / norm(e1_map);
