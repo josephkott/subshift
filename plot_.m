@@ -1,14 +1,13 @@
-function plot_gscan(params, u_span, du_span)
+function plot_(params, u_span, du_span)
 
 L1 = params(2); L2 = params(2);
 L = L1 + L2;
 
 intervals_scan = 512;
-intervals_solve = 2048;
 
 % M = 2048; N = 2048;
-% M = 1024; N = 1024;
-M = 256; N = 256; % debug mode
+ M = 1024; N = 1024;
+% M = 128; N = 128; % debug mode
 
 x_span_plus  = [0 +L];
 x_span_minus = [0 -L];
@@ -25,66 +24,26 @@ pair = [du_indices u_indices];
 
 % bind parameters
 to_values  = @(u_index, du_index) map_indices_to_values(u_span, du_span, M, N, u_index, du_index);
-to_indices = @(u, du) map_values_to_indices(u_span, du_span, M, N, u, du);
 
-result_image_g1 = result_image;
-result_image_g2 = result_image;
-
-shrinkage_max = 0;
-u_max = 0;
-du_max = 0;
-u_map_max = 0;
-du_map_max = 0;
+result_image_signs = result_image;
 
 for i = 1:length(u_indices)
 	du_index = pair(i, 1);
 	u_index  = pair(i, 2);
 	
 	[u0, du0] = to_values(u_index, du_index);
-	[~, U] = f_solve(params, x_span_minus, [u0 du0], intervals_solve);
-	
-	u_map  = U(end, 1);
-	du_map = U(end, 2);
-	
-	[u_index_map, du_index_map] = to_indices(u_map, du_map);
-	
-	if ~isnan(u_index_map) && ~isnan(du_index_map)
-		[g1_sign, g2_sign, shrinkage] = get_signs_of_g_functions(params, u_map, du_map);
+	same_signs = get_signs_of_linearization_matrix_values(params, u0, du0);
 		
-		if ~isempty(find(pair(:, 1) == du_index_map & pair(:, 2) == u_index_map, 1))
-			shrinkage_max = max(shrinkage_max, shrinkage);
-			
-			u_max = u0;
-			du_max = du0;
-			u_map_max = u_map;
-			du_map_max = du_map;
-		end
-		
-		% Coloring
-		if g1_sign == +1
-			result_image_g1(du_index_map, u_index_map) = 0.75; % orange
-		else
-			result_image_g1(du_index_map, u_index_map) = 0.15; % ?
-		end
-		
-		if g2_sign == +1
-			result_image_g2(du_index_map, u_index_map) = 0.75; % orange
-		else
-			result_image_g2(du_index_map, u_index_map) = 0.15; % ?
-		end
+	% Coloring
+	if same_signs == +1
+		result_image_signs(du_index, u_index) = 0.75; % orange
+	elseif same_signs == -1
+		result_image_signs(du_index, u_index) = 0.5; % ?
 	end
 end
 
-f = figure('Position', [100, 100, 1500, 600]);
-subplot(1, 2, 1)
-plot_scan(u_span, du_span, result_image_g1, false, 'jet')
-title('sing(g1): orange (+), blue (-)')
-subplot(1, 2, 2)
-plot_scan(u_span, du_span, result_image_g2, false, 'jet')
-title('sing(g2): orange (+), blue (-)')
-
-fprintf('Shrinkage: %.6g, mapped point: (%.6g, %.6g) from (%.6g, %.6g)\n',...
-	shrinkage_max, u_map_max, du_map_max, u_max, du_max)
+f = figure('Position', [100, 100, 750, 600]);
+plot_scan(u_span, du_span, result_image_signs, false, 'jet')
 
 end
 
@@ -142,7 +101,7 @@ result_image(U_plus_set == 0 & U_minus_set == 0) = 1; % intersection of non-coll
 end
 
 
-function [g1_sign, g2_sign, shrinkage] = get_signs_of_g_functions(params, u0, du0)
+function same_signs = get_signs_of_linearization_matrix_values(params, u0, du0)
 % g_1(p) = (DT_p e_1, e_1) \dot (DT_p e_2, e_1)
 % g_2(p) = (DT_p e_1, e_2) \dot (DT_p e_2, e_2)
 % where p = (u_0, u_0')
@@ -160,13 +119,13 @@ p0 = [u0 du0];
 p1 = [u0 + delta, du0];
 p2 = [u0, du0 + delta];
 
-[~, U] = f_solve(params, [0 +L], p0, intervals);
+[~, U] = f_solve(params, [0 -L], p0, intervals);
 p0_map = U(end, :);
 
-[~, U] = f_solve(params, [0 +L], p1, intervals);
+[~, U] = f_solve(params, [0 -L], p1, intervals);
 p1_map = U(end, :);
 
-[~, U] = f_solve(params, [0 +L], p2, intervals);
+[~, U] = f_solve(params, [0 -L], p2, intervals);
 p2_map = U(end, :);
 
 % Create vectors
@@ -175,10 +134,17 @@ e2 = p2 - p0;
 e1_map = p1_map - p0_map;
 e2_map = p2_map - p0_map;
 
-g1_sign = sign(dot(e1_map, e1) * dot(e2_map, e1));
-g2_sign = sign(dot(e1_map, e2) * dot(e2_map, e2));
+A = [e1_map' e2_map'];
 
-shrinkage = abs(e2_map(2) - (e1_map(2) * e2_map(1)) / e1_map(1)) / delta;
+% if all(A(:) > 0)
+if all(sign(A(:)) == [+1; -1; -1; +1;])
+	same_signs = +1;
+% elseif all(A(:) < 0)
+elseif all(sign(A(:)) == [-1; +1; +1; -1;])
+	same_signs = -1;
+else
+	same_signs = 0;
+end
 
 end
 
