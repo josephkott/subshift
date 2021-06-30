@@ -33,8 +33,8 @@ du_predicted = sqrt(2) * (u_sep .^ 2) .* dn(delta + nthroot(2, 4) * L2 * u_sep, 
 	.* sn(delta + nthroot(2, 4) * L2 * u_sep, k);
 
 % Compute predicted ponts of intersections s^{-}(u) with T_0 [ s^{+}(u) ]
-m = [1 2 3 4 5];
-u_intersect = (-2 * icn(-1 / nthroot(2, 4), k) + 4 * K(k) * m) / (nthroot(2, 4) * L2);
+m = [1 2 3 4 5 6 7 8 9 10];
+u_intersect = (-2 * icn(-1 / nthroot(2, 4), k) + 2 * K(k) * m) / (nthroot(2, 4) * L2);
 du_intersect = s_minus(u_intersect);
 
 figure('Position', [100, 100, 350, 300])

@@ -1,7 +1,7 @@
 %% asymptotic formala for the 1st interval (*)
 
 L1 = pi / 2; L2 = pi / 2; L = L1 + L2;
-params = [-1.5 pi/2 pi/2];
+params = [-1 pi/2 pi/2];
 u_span = [-4 +4]; du_span = [-8 +8];
 M = 256; N = 256;
 

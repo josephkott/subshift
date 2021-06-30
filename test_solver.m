@@ -1,6 +1,6 @@
 %% Nonlinear potential plot
 x = -3 * pi : 0.01 : 3 * pi;
-L1 = pi / 2; L2 = pi / 2;
+L1 = 2; L2 = 1;
 u = sigma(x, L1, L2);
 
 plot(x, u, 'LineWidth', 2)
